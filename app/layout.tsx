@@ -16,7 +16,16 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "ReelFocus",
-  description: "Experience the new way of creation with ReelFocus. Transform your workflow and focus on what matters like never before.",
+  description: "Catch Your Momentum, Not Just Your Goals. Reduce fear of failure and feeling of overwhelm and stop procrastinating today.",
+  openGraph: {
+    title: "ReelFocus",
+    description: "Catch Your Momentum, Not Just Your Goals. Reduce fear of failure and feeling of overwhelm and stop procrastinating today.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ReelFocus",
+    description: "Catch Your Momentum, Not Just Your Goals. Reduce fear of failure and feeling of overwhelm and stop procrastinating today.",
+  },
   icons: {
     icon: [
       {
