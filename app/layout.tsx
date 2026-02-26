@@ -15,8 +15,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "vibedev.ai",
-  description: "Experience the new way of coding with vibedev.ai. Transform your development workflow and vibe with your code like never before.",
+  title: "ReelFocus",
+  description: "Experience the new way of creation with ReelFocus. Transform your workflow and focus on what matters like never before.",
   icons: {
     icon: [
       {
@@ -58,14 +58,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <link rel="icon" type="image/png" sizes="32x32" href="/images/idevibelogo.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/images/idevibelogo.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/images/idevibelogo.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${inter.className} bg-black bg-dotted-grid`}>{children}</body>
+      <body className={`${inter.className} bg-white bg-dotted-grid-light`}>{children}</body>
     </html>
   );
 }

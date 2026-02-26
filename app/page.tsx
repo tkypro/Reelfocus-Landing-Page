@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Playfair_Display, Inter } from 'next/font/google'
+import { OceanRipples } from "@/components/ocean-ripples"
 
 const playfair = Playfair_Display({ 
   subsets: ['latin'],
@@ -19,6 +20,45 @@ const inter = Inter({
 
 export default function Page() {
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [signupStatus, setSignupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [signupMessage, setSignupMessage] = useState<string>("");
+
+  const handleEarlyAccessSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSignupStatus("loading");
+    setSignupMessage("");
+
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    const name = String(data.get("name") ?? "").trim();
+    const email = String(data.get("email") ?? "").trim();
+
+    try {
+      const res = await fetch("/api/early-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const msg =
+          (body && typeof body === "object" && "error" in body && typeof (body as any).error === "string"
+            ? (body as any).error
+            : "Sign up failed. Please try again.");
+        setSignupStatus("error");
+        setSignupMessage(msg);
+        return;
+      }
+
+      form.reset();
+      setSignupStatus("success");
+      setSignupMessage("You’re in! We’ll email you soon.");
+    } catch {
+      setSignupStatus("error");
+      setSignupMessage("Network error. Please try again.");
+    }
+  };
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver((entries) => {
@@ -39,29 +79,8 @@ export default function Page() {
     return () => observerRef.current?.disconnect();
   }, []);
 
-  useEffect(() => {
-    const loadTally = () => {
-      const existingScript = document.querySelector('script[src="https://tally.so/widgets/embed.js"]');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = "https://tally.so/widgets/embed.js";
-        script.async = true;
-        script.onload = () => {
-          // @ts-ignore
-          if (window.Tally) {
-            // @ts-ignore
-            window.Tally.loadEmbeds();
-          }
-        };
-        document.body.appendChild(script);
-      }
-    };
-
-    loadTally();
-  }, []);
-
   return (
-    <div className={`flex flex-col min-h-screen bg-black text-foreground bg-dotted-grid ${inter.className}`}>
+    <div className={`flex flex-col min-h-screen bg-white text-foreground bg-dotted-grid-light ${inter.className}`}>
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
@@ -84,7 +103,7 @@ export default function Page() {
         
         .glimmer-card {
           position: relative;
-          background: rgb(23, 23, 23);
+          background: rgb(248, 248, 248);
           border-radius: 12px;
           overflow: hidden;
         }
@@ -108,7 +127,7 @@ export default function Page() {
 
         .glimmer-pill {
           position: relative;
-          background: rgb(23, 23, 23);
+          background: rgb(248, 248, 248);
           border-radius: 9999px;
           overflow: hidden;
         }
@@ -139,8 +158,8 @@ export default function Page() {
           height: 600px;
           background: radial-gradient(
             circle at center,
-            rgba(255, 255, 255, 0.08) 0%,
-            rgba(255, 255, 255, 0.03) 35%,
+            rgba(255, 255, 255, 0.28) 0%,
+            rgba(255, 255, 255, 0.10) 35%,
             transparent 70%
           );
           pointer-events: none;
@@ -164,54 +183,74 @@ export default function Page() {
         .scroll-delay-3 { transition-delay: 0.3s; }
       `}</style>
 
-      {/* Navigation */}
-      <header className="flex items-center justify-between py-4 px-6 border-b border-neutral-800/50">
-        <Link href="/" className={`text-2xl md:text-3xl font-medium ${playfair.className}`}>
-          VibeDev.ai
-        </Link>
-        <nav className="flex items-center gap-4">
-          <Button 
-            size="sm"
-            onClick={() => {
-              document.getElementById('early-access-form')?.scrollIntoView({ 
-                behavior: 'smooth',
-                block: 'center'
-              });
-            }}
-          >
-            Sign Up
-          </Button>
-        </nav>
-      </header>
+      {/* Ocean/Lake hero background (stops before steps) */}
+      <div className="relative overflow-hidden">
+        <OceanRipples />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/0 to-white/70 pointer-events-none" />
 
-      <main className="flex-grow">
+        {/* Navigation */}
+        <header className="relative z-10 flex items-center justify-between py-4 px-6 border-b border-white/25 bg-white/10 backdrop-blur-sm">
+          <Link
+            href="/"
+            className={`text-2xl md:text-3xl font-medium text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] ${playfair.className}`}
+          >
+            ReelFocus
+          </Link>
+          <nav className="flex items-center gap-4">
+            <Button
+              size="sm"
+              className="rounded-full bg-black/20 text-white border border-white/30 hover:bg-black/25 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+              onClick={() => {
+                document.getElementById('how-it-works')?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start'
+                });
+              }}
+            >
+              How it works
+            </Button>
+            <Button
+              size="sm"
+              className="rounded-full bg-black/20 text-white border border-white/30 hover:bg-black/25 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+              onClick={() => {
+                document.getElementById('early-access-form')?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center'
+                });
+              }}
+            >
+              Sign Up
+            </Button>
+          </nav>
+        </header>
+
         {/* Hero Section */}
         <section className="py-20 px-6 relative">
           <div className="hero-glow" />
           <div className="max-w-[1200px] mx-auto text-center relative z-10">
-            {/* Logo Placeholder */}
+            {/* Logo */}
             <div className="mb-4">
-              <img 
-                src="/images/idevibelogo.png" 
-                alt="VibeDev Logo" 
-                className="w-36 h-36 mx-auto object-contain"
+              <img
+                src="/images/logo.png"
+                alt="ReelFocus Logo"
+                className="w-36 h-36 mx-auto object-contain drop-shadow-[0_14px_30px_rgba(0,0,0,0.25)] rounded-2xl"
               />
             </div>
-            <div className="inline-flex items-center px-6 py-2 text-base font-medium text-purple-400 mb-8 glimmer-pill fade-in bg-purple-500/10 border border-purple-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
-              <span className={playfair.className}>A Software Composer app</span>
+            <div className="inline-flex items-center px-6 py-2 text-base font-semibold text-sky-950 mb-8 glimmer-pill fade-in bg-white/80 border border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-sm">
+              <span className={playfair.className}>An Anti-Procrastination App</span>
             </div>
-            <h1 className={`text-4xl md:text-5xl font-medium mb-6 tracking-tight fade-in delay-1 ${playfair.className}`}>
-              The Easiest Way To<br />Vibe Code With Cursor
+            <h1 className={`text-4xl md:text-5xl font-medium mb-6 tracking-tight fade-in delay-1 text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.55)] ${playfair.className}`}>
+              Catch your momentum, not just your goals
             </h1>
-            <p className="text-lg text-neutral-400 mb-8 fade-in delay-2">
-              VibeDev is your IDE for Vibe Coding
+            <p className="text-lg text-white/95 mb-8 fade-in delay-2 drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+              Join our beta test today to receive exclusive rewards!
             </p>
             <div className="fade-in delay-3">
-              <Button 
-                size="lg" 
-                className="rounded-full"
+              <Button
+                size="lg"
+                className="rounded-full bg-white text-sky-900 hover:bg-white/90 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
                 onClick={() => {
-                  document.getElementById('early-access-form')?.scrollIntoView({ 
+                  document.getElementById('early-access-form')?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
                   });
@@ -222,124 +261,96 @@ export default function Page() {
             </div>
           </div>
         </section>
+      </div>
 
-        {/* Demo Section */}
-        <section className="py-20 px-6">
-          <div className="max-w-[1200px] mx-auto scroll-animation">
-            <div className="glimmer-card">
-              <div className="bg-neutral-900">
-                <div className="flex flex-col md:flex-row h-auto md:h-[600px]">
-                  {/* Input Section */}
-                  <div className="w-full md:w-1/2 md:border-r border-neutral-800 p-6 flex flex-col">
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium text-neutral-400 mb-2">What should Cursor do?</label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="Describe what you want to build..."
-                          className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/30"
-                        />
-                        <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-green-500/10 rounded-lg text-green-400 hover:bg-green-500/20 transition-colors">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M22 2L11 13"/>
-                            <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-neutral-400 mb-4">Start from</h3>
-                      <div className="grid grid-cols-1 gap-3">
-                        {[...Array(2)].map((_, i) => (
-                          <button
-                            key={i}
-                            className="flex items-center gap-3 p-4 bg-neutral-800/50 rounded-lg hover:bg-neutral-800 transition-colors text-left group"
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                              </svg>
-                            </div>
-                            <span className="text-sm font-medium">Template {i + 1}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+      <main className="flex-grow">
 
-                  {/* Cursor Composer Section - Hidden on mobile */}
-                  <div className="hidden md:flex md:w-1/2 md:flex-col">
-                    <div className="p-4 border-b border-neutral-800">
-                      <h2 className="text-lg font-medium">Cursor Composer</h2>
-                    </div>
-                    <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                      {/* First Message */}
-                      <div className="flex justify-end">
-                        <div className="max-w-[85%] p-4 bg-neutral-800 rounded-lg">
-                          <p className="text-sm text-neutral-300 text-right">
-                            Sure, I can make those changes for you.
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Status Updates */}
-                      <div className="flex flex-col gap-2">
-                        <div className="self-end max-w-[85%] p-3 bg-neutral-800 rounded-lg">
-                          <p className="text-sm font-medium text-green-400 text-right">File generated</p>
-                        </div>
-                        <div className="self-end max-w-[85%] p-3 bg-neutral-800 rounded-lg">
-                          <p className="text-sm font-medium text-green-400 text-right">File generated</p>
-                        </div>
-                        <div className="self-end max-w-[85%] p-3 bg-neutral-800 rounded-lg">
-                          <p className="text-sm font-medium text-green-400 text-right">File generated</p>
-                        </div>
-                        <div className="self-end max-w-[85%] p-3 bg-neutral-800 rounded-lg">
-                          <p className="text-sm font-medium text-green-400 text-right">File generated</p>
-                        </div>
-                      </div>
-
-                      {/* Completion Message */}
-                      <div className="flex justify-end">
-                        <div className="max-w-[85%] p-4 bg-neutral-800 rounded-lg">
-                          <p className="text-sm text-neutral-300 text-right">
-                            I&apos;ve successfully created your app
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 border-t border-neutral-800">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="Type your message..."
-                          className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/30"
-                        />
-                        <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-green-500/10 rounded-lg text-green-400 hover:bg-green-500/20 transition-colors">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M22 2L11 13"/>
-                            <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+        {/* Feature Sections - Alternating image & text */}
+        <section id="how-it-works" className="pt-12 md:pt-16 pb-0 px-6 bg-white">
+          <div className="max-w-[1200px] mx-auto space-y-12 md:space-y-16">
+            <h2 className={`text-3xl md:text-4xl font-medium text-neutral-900 text-center mb-4 ${playfair.className}`}>
+              Reduce procrastination in 4 steps:
+            </h2>
+            {/* Row 1: Text left, Image right */}
+            <div className="flex flex-col md:flex-row md:items-center gap-10 md:gap-16">
+              <div className="w-full md:w-1/2 flex flex-col justify-center md:order-1">
+                <h2 className={`text-3xl md:text-4xl font-medium text-neutral-900 mb-4 leading-tight ${playfair.className}`}>
+                  Release
+                </h2>
+                <p className="text-neutral-600 text-lg">
+                  Let go of the emotional weight that makes starting feel impossible. ReelFocus helps you pause, breathe, and unload self-doubt through gentle check-ins and reassuring prompts.
+                </p>
+              </div>
+              <div className="w-full md:w-1/2 flex justify-center md:order-2">
+                <div className="w-full max-w-[200px] rounded-3xl overflow-hidden shadow-lg border border-neutral-200">
+                  <img src="/images/step-release.png" alt="How are you feeling now — check-in" className="w-full aspect-[9/19] object-cover" />
                 </div>
+              </div>
+            </div>
+
+            {/* Row 2: Image left, Text right */}
+            <div className="flex flex-col md:flex-row md:items-center gap-10 md:gap-16 bg-sky-50/40 -mx-6 px-6 py-8 md:py-10 rounded-2xl">
+              <div className="w-full md:w-1/2 flex justify-center md:order-1">
+                <div className="w-full max-w-[200px] rounded-3xl overflow-hidden shadow-lg border border-neutral-200">
+                  <img src="/images/step-untangle.png" alt="New Task — break work into steps" className="w-full aspect-[9/19] object-cover" />
+                </div>
+              </div>
+              <div className="w-full md:w-1/2 flex flex-col justify-center md:order-2">
+                <h2 className={`text-3xl md:text-4xl font-medium text-neutral-900 mb-4 leading-tight ${playfair.className}`}>
+                  Untangle
+                </h2>
+                <p className="text-neutral-600 text-lg">
+                Big tasks can feel overwhelming when they’re unclear. ReelFocus breaks assignments into small, manageable next steps so you always know exactly where to begin.
+                </p>
+              </div>
+            </div>
+
+            {/* Row 3: Text left, Image right */}
+            <div className="flex flex-col md:flex-row md:items-center gap-10 md:gap-16">
+              <div className="w-full md:w-1/2 flex flex-col justify-center md:order-1">
+                <h2 className={`text-3xl md:text-4xl font-medium text-neutral-900 mb-4 leading-tight ${playfair.className}`}>
+                  Cast
+                </h2>
+                <p className="text-neutral-600 text-lg">
+                Once you have one simple step, it’s time to focus. With a calm timer and distraction-free space, ReelFocus helps you commit to just a few minutes of progress.
+                </p>
+              </div>
+              <div className="w-full md:w-1/2 flex justify-center md:order-2">
+                <div className="w-full max-w-[200px] rounded-3xl overflow-hidden shadow-lg border border-neutral-200">
+                  <img src="/images/step-cast.png" alt="Focus timer — cast and concentrate" className="w-full aspect-[9/19] object-cover" />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 4: Image left, Text right */}
+            <div className="flex flex-col md:flex-row md:items-center gap-10 md:gap-16 bg-sky-50/40 -mx-6 px-6 py-8 md:py-10 rounded-2xl">
+              <div className="w-full md:w-1/2 flex justify-center md:order-1">
+                <div className="w-full max-w-[200px] rounded-3xl overflow-hidden shadow-lg border border-neutral-200">
+                  <img src="/images/step-reel-in.png" alt="Reflect on your catch — celebrate progress" className="w-full aspect-[9/19] object-cover" />
+                </div>
+              </div>
+              <div className="w-full md:w-1/2 flex flex-col justify-center md:order-2">
+                <h2 className={`text-3xl md:text-4xl font-medium text-neutral-900 mb-4 leading-tight ${playfair.className}`}>
+                  Reel In
+                </h2>
+                <p className="text-neutral-600 text-lg">
+                Every effort deserves recognition. ReelFocus rewards your progress with reflection, encouragement, and a sense of accomplishment, helping you build confidence, not pressure.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="py-20 px-6 border-t border-neutral-800">
+        <section className="pt-0 pb-12 md:pb-16 px-6 bg-white">
           <div className="max-w-[1200px] mx-auto">
-            <div className="text-center mb-16 scroll-animation">
-              <h2 className={`text-3xl md:text-4xl font-medium mb-3 ${playfair.className}`}>Create in Minutes, Not Months</h2>
+            <div className="text-center mb-16">
+              <h2 className={`text-3xl md:text-4xl font-medium mb-3 ${playfair.className}`}>Play Together. Stay Motivated</h2>
               <p className="text-neutral-400 text-lg">Transform your ideas into reality with three simple prompts.</p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 relative">
-              <div className="bg-neutral-900 p-8 rounded-xl border border-neutral-800/80 hover:border-green-500/20 transition-colors scroll-animation scroll-delay-1 group">
+            <div className="grid md:grid-cols-3 gap-6 relative max-w-5xl mx-auto md:items-stretch">
+              <div className="bg-neutral-50 p-8 rounded-xl border border-neutral-200 hover:border-green-500/30 transition-colors group">
                 <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:bg-green-500/20 transition-colors">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -347,33 +358,25 @@ export default function Page() {
                     <line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
                 </div>
-                <h3 className={`text-xl font-medium mb-3 group-hover:text-green-400 transition-colors ${playfair.className}`}>Download Template</h3>
+                <h3 className={`text-xl font-medium mb-3 group-hover:text-green-400 transition-colors ${playfair.className}`}>Fish Together</h3>
                 <p className="text-neutral-400 leading-relaxed">
-                  Get started with our production-ready template. It&apos;s packed with everything you need to build a stunning landing page.
+                Team up with friends and fish side-by-side in real time. Seeing others stay active creates a sense of shared momentum, helping you mirror productive behavior and stay focused instead of procrastinating.
                 </p>
               </div>
 
-              <div className="bg-neutral-900 p-8 rounded-xl border border-neutral-800/80 hover:border-green-500/20 transition-colors scroll-animation scroll-delay-2 group">
+              <div className="flex justify-center items-center">
+                <img src="/images/fish-together-hero.png" alt="Add your tasks to start Fishing — fish with friends" className="rounded-2xl shadow-lg border border-neutral-200 w-full max-w-[220px] object-cover" />
+              </div>
+
+              <div className="bg-neutral-50 p-8 rounded-xl border border-neutral-200 hover:border-green-500/30 transition-colors group">
                 <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:bg-green-500/20 transition-colors">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4z"/>
                   </svg>
                 </div>
-                <h3 className={`text-xl font-medium mb-3 group-hover:text-green-400 transition-colors ${playfair.className}`}>Tell VibeDev What You Want</h3>
+                <h3 className={`text-xl font-medium mb-3 group-hover:text-green-400 transition-colors ${playfair.className}`}>Streaks</h3>
                 <p className="text-neutral-400 leading-relaxed">
-                  Describe your vision in plain English. VibeDev will control Cursor to transform your words into a beautiful, functional design.
-                </p>
-              </div>
-
-              <div className="bg-neutral-900 p-8 rounded-xl border border-neutral-800/80 hover:border-green-500/20 transition-colors scroll-animation scroll-delay-3 group">
-                <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:bg-green-500/20 transition-colors">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-                  </svg>
-                </div>
-                <h3 className={`text-xl font-medium mb-3 group-hover:text-green-400 transition-colors ${playfair.className}`}>Deploy to Vercel</h3>
-                <p className="text-neutral-400 leading-relaxed">
-                  Deploy your landing page to Vercel with one click. Share your creation with the world instantly on a global edge network.
+                Build daily streaks by showing up consistently. Visual progress keeps you accountable and turns small actions into lasting habits.
                 </p>
               </div>
             </div>
@@ -381,45 +384,75 @@ export default function Page() {
         </section>
 
         {/* Early Access Form Section */}
-        <section id="early-access-form" className="py-20 px-6 border-t border-neutral-800 bg-neutral-900/80">
+        <section id="early-access-form" className="py-12 md:py-16 px-6 bg-sky-50/40">
           <div className="max-w-[1200px] mx-auto text-center">
-            <div className="scroll-animation">
+            <div>
               <h2 className={`text-3xl md:text-4xl font-medium mb-4 ${playfair.className}`}>Get Early Access</h2>
-              <p className="text-neutral-400 mb-12">Be the first to experience the future of coding.</p>
+              <p className="text-neutral-600 mb-12">Be the first to experience ReelFocus.</p>
             </div>
-            <div className="max-w-[400px] mx-auto scroll-animation">
-              <iframe 
-                data-tally-src="https://tally.so/embed/wM756p?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" 
-                loading="lazy" 
-                width="100%" 
-                height="230" 
-                frameBorder="0" 
-                title="Sign Up for Early Access"
-              ></iframe>
-            </div>
+            <form className="max-w-[400px] mx-auto space-y-4 text-left" onSubmit={handleEarlyAccessSubmit}>
+              <div>
+                <label htmlFor="early-name" className="block text-sm font-medium text-neutral-700 mb-1.5">Name</label>
+                <input
+                  id="early-name"
+                  type="text"
+                  name="name"
+                  placeholder="Your name"
+                  className="w-full px-4 py-3 bg-white border border-neutral-200 rounded-lg text-neutral-900 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/30"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="early-email" className="block text-sm font-medium text-neutral-700 mb-1.5">Email</label>
+                <input
+                  id="early-email"
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 bg-white border border-neutral-200 rounded-lg text-neutral-900 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/30"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full rounded-full" disabled={signupStatus === "loading"}>
+                {signupStatus === "loading" ? "Signing up..." : "Sign up"}
+              </Button>
+              {signupMessage ? (
+                <p
+                  className={
+                    signupStatus === "success"
+                      ? "text-sm text-green-700"
+                      : signupStatus === "error"
+                        ? "text-sm text-red-700"
+                        : "text-sm text-neutral-600"
+                  }
+                >
+                  {signupMessage}
+                </p>
+              ) : null}
+            </form>
           </div>
         </section>
       </main>
 
-      <footer className="py-8 px-6 border-t border-neutral-800/50 scroll-animation">
+      <footer className="py-8 px-6 border-t border-neutral-200 bg-sky-50/20 scroll-animation">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <div className="text-sm text-neutral-400">
-            © 2024 Software Composer LP. All rights reserved.
+            © 2026 ReelFocus. All rights reserved.
           </div>
           <div className="flex items-center gap-6">
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-neutral-900 transition-colors">
               <span className="sr-only">Twitter</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
               </svg>
             </a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-neutral-900 transition-colors">
               <span className="sr-only">GitHub</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
               </svg>
             </a>
-            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors">
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-neutral-900 transition-colors">
               <span className="sr-only">Discord</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6h0a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-7a3 3 0 0 1-3-3v0"/>
@@ -428,7 +461,7 @@ export default function Page() {
                 <circle cx="16" cy="12" r="1"/>
               </svg>
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors">
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-neutral-900 transition-colors">
               <span className="sr-only">LinkedIn</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
