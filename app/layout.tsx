@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const playfair = Playfair_Display({ 
@@ -74,7 +75,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/images/idevibelogo.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${inter.className} bg-white bg-dotted-grid-light`}>{children}</body>
+      <body className={`${inter.className} bg-white bg-dotted-grid-light`}>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
