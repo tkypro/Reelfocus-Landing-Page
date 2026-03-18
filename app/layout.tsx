@@ -30,28 +30,28 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/images/idevibelogo.png",
+        url: "/images/logo.png",
         type: "image/png",
         sizes: "32x32"
       },
       {
-        url: "/images/idevibelogo.png",
+        url: "/images/logo.png",
         type: "image/png",
         sizes: "16x16"
       }
     ],
     apple: [
       {
-        url: "/images/idevibelogo.png",
+        url: "/images/logo.png",
         type: "image/png",
         sizes: "180x180"
       }
     ],
-    shortcut: [{ url: "/images/idevibelogo.png" }],
+    shortcut: [{ url: "/images/logo.png" }],
     other: [
       {
         rel: "icon",
-        url: "/images/idevibelogo.png",
+        url: "/images/logo.png",
       },
     ],
   },
@@ -70,9 +70,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" sizes="32x32" href="/images/idevibelogo.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/images/idevibelogo.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/images/idevibelogo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${inter.className} bg-white bg-dotted-grid-light`}>
